@@ -113,3 +113,20 @@ button{font:inherit;cursor:pointer}
   .know{padding:14px}
   .deco{display:none}
 }
+
+/* join-us popup */
+.modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(27,22,80,.45);backdrop-filter:blur(3px);animation:mfade .25s ease}
+.mbox{position:relative;width:100%;max-width:460px;max-height:92vh;overflow:auto;background:#fff;border-radius:26px;padding:34px 30px 28px;text-align:center;box-shadow:0 30px 80px rgba(27,22,80,.35);animation:mpop .3s ease}
+.mbox h2{font-size:23px;line-height:1.25;font-weight:800;margin:14px 0 6px;color:var(--navy)}
+.mbox .hint{margin-bottom:18px}
+.mx{position:absolute;top:12px;right:14px;width:36px;height:36px;border:0;border-radius:50%;background:var(--tint);color:var(--p);font-size:24px;line-height:1;cursor:pointer}
+.mx:hover{background:#e4dcff}
+.okmark.sm{width:60px;height:60px;font-size:28px}
+.mbtns{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.mbtns .next,.mbtns .prev{height:52px;width:100%;justify-content:center;padding:0 20px;font-size:16px}
+.fl{display:block;text-align:left;font-weight:700;font-size:14px;color:var(--navy);margin-bottom:12px}
+.fl .txt{display:block;margin-top:5px;font-weight:400;padding:12px 18px;font-size:16px;border-radius:16px}
+.mbox .msg{text-align:left;margin:0 2px 8px}
+.mstep{animation:mfade .25s ease}
+@keyframes mfade{from{opacity:0}to{opacity:1}}
+@keyframes mpop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}

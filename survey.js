@@ -10,15 +10,11 @@ var S = [
   {id:"q1",k:"mc",r:1,t:"How important is it to remember your period dates every month?",o:IMP},
   {id:"q2",k:"mc",r:1,t:"Why is this important?",o:["To easily manage those dates","To carry the essentials","To take leave from work, college or school","To plan any auspicious rituals at home"]},
   {id:"q3",k:"mc",r:1,t:"How do you remember your period dates?",o:["By noting it in a calendar","By memory","Through my mother or sister","By physically noting it in a diary"]},
-  {id:"q4",k:"mc",r:1,t:"If there were a digital calendar to record and remind you of your dates, with high privacy, and to track the biological changes in your body, would you use it?",o:YN},
-  {id:"q5",k:"short",r:1,t:"If No, why?",show:["q4",["No"]]},
-  {id:"q6",k:"para",r:1,t:"What more details would you require in that digital calendar?"}]},
+  {id:"q4",k:"mc",r:1,t:"If there were a digital calendar to record and remind you of your dates, with high privacy, and to track the biological changes in your body, would you use it?",o:YN}]},
  {t:"Interactive Private Chat or Q&A with a Renowned Gynaecologist", q:[
   {id:"q7",k:"mc",r:1,t:"How important is it to maintain your gynaecological health?",o:IMP},
   {id:"q8",k:"mc",r:1,t:"What do you do when you notice small symptoms?",o:["Visit a gynaecologist immediately","Allow it to cure on its own","Not necessary to visit a doctor","Take guidance from my mother or sister"]},
-  {id:"q9",k:"mc",r:1,t:"If there were a digital connect with a renowned gynaecologist, would you be interested in using that platform to chat with the doctor online for basic consultation?",o:YN},
-  {id:"q10",k:"short",r:1,t:"If No, why?",show:["q9",["No"]]},
-  {id:"q11",k:"para",r:1,t:"What more would you want if we give you a digital connect?"}]},
+  {id:"q9",k:"mc",r:1,t:"If there were a digital connect with a renowned gynaecologist, would you be interested in using that platform to chat with the doctor online for basic consultation?",o:YN}]},
  {t:"Detailed Information on Menstruation", q:[
   {id:"q12",k:"mc",r:1,t:"Are you fully aware about menstruation?",o:["Fully aware","Somewhat aware","Knows everything","Not aware in detail"]},
   {id:"q13",k:"mc",r:1,t:"Do you know the importance of menstruation in your body?",o:YN},
@@ -33,8 +29,7 @@ var S = [
   {id:"q20",k:"mc",r:1,t:"Would you be interested to know about menopause management?",o:YN}]},
  {t:"Overall", q:[
   {id:"q21",k:"mc",r:1,t:"Would you be interested in using a digital platform which gives you calendar management, private room Q&A with a gynaecologist, details about menstruation, the right method to choose a napkin, and menopause management under one roof?",o:YN},
-  {id:"q22",k:"para",r:1,t:"What else do you feel is more important in your femininity?"},
-  {id:"q23",k:"mc",r:1,t:"Would you be interested to join us to share your valuable feedback then and there? This will support us to give this society a complete guide to manage womanhood.",o:["Yes, sure","No, I don’t want to"]}]}
+  {id:"q23",k:"mc",r:1,t:"Would you be interested to join us to share your valuable feedback then and there?",n:"This will support us to give this society a complete guide to manage womanhood.",o:["Yes, sure","No, I don’t want to"]}]}
 ];
 
 
@@ -76,7 +71,7 @@ function render(){
     h+='<textarea class="txt" id="ans" placeholder="Type your answer here">'+esc(cv)+'</textarea>';
   }
   h+='<p class="msg" id="msg"></p>'
-   +'<div class="know"><div class="kicon">'+svg(BULB)+'</div><div><b>Good to know</b><span>Your responses are confidential and will only be used to improve the Easy Days app.</span></div></div>'
+   +(q.n?'<div class="know"><div class="kicon">'+svg(BULB)+'</div><div><b>Good to know</b><span>'+esc(q.n)+'</span></div></div>':'')
    +'</div></div>'
    +'<div class="actions"><button type="button" class="prev" id="prev"'+(cur?'':' style="visibility:hidden"')+'>'+svg(ARL)+'<span>Previous</span></button>'
    +'<button type="button" class="next" id="next"><span>'+(last?"Submit":"Next")+'</span>'+svg(ARR)+'</button></div>';
@@ -129,6 +124,7 @@ function submit(){
     .then(function(j){
       $("survey").classList.add("hide"); $("done").classList.remove("hide");
       window.scrollTo({top:0,behavior:"smooth"});
+      setTimeout(openJoin,900);
     })
     .catch(function(e){
       btn.disabled=false; btn.firstChild.textContent="Submit";
@@ -140,5 +136,37 @@ function submit(){
       err.classList.remove("hide");
     });
 }
+
+/* ---- "Join us" popup (shown after the survey is submitted) ---- */
+var jm=$("joinModal");
+function jmShow(id){["jmAsk","jmForm","jmThanks"].forEach(function(x){$(x).classList.toggle("hide",x!==id)})}
+function openJoin(){jmShow("jmAsk");jm.classList.remove("hide");document.body.style.overflow="hidden"}
+function closeJoin(){jm.classList.add("hide");document.body.style.overflow=""}
+$("jmClose").onclick=$("jmDone").onclick=closeJoin;
+jm.addEventListener("mousedown",function(e){if(e.target===jm)closeJoin()});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!jm.classList.contains("hide"))closeJoin()});
+$("jmNo").onclick=function(){
+  $("jmThanksT").textContent="Thank you for your valuable time.";
+  $("jmThanksP").textContent="We really appreciate your support. 💜";
+  jmShow("jmThanks");
+};
+$("jmYes").onclick=function(){jmShow("jmForm");$("jmName").focus()};
+$("jmSend").onclick=function(){
+  var n=$("jmName").value.trim(), em=$("jmEmail").value.trim(), ph=$("jmPhone").value.trim(), m=$("jmMsg"), b=$("jmSend");
+  if(n.length<2){m.textContent="Please enter your name.";return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){m.textContent="Please enter a valid email address.";return}
+  var digits=ph.replace(/\D/g,"");
+  if(digits.length<7||digits.length>15||!/^[0-9+()\-\s]+$/.test(ph)){m.textContent="Please enter a valid phone number.";return}
+  m.textContent=""; b.disabled=true; b.firstChild.textContent="Submitting…";
+  fetch("join.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:n,email:em,phone:ph})})
+    .then(function(r){return r.json().catch(function(){return {}}).then(function(j){if(!r.ok||!j.ok)throw new Error(j.error||"Could not save your details.");})})
+    .then(function(){
+      $("jmThanksT").textContent="Thank you for joining us!";
+      $("jmThanksP").textContent="We’ll contact you soon. 💜";
+      jmShow("jmThanks");
+    })
+    .catch(function(e){m.textContent=e.message&&e.message!=="Failed to fetch"?e.message:"Sorry, we couldn’t reach the server. Please try again.";})
+    .then(function(){b.disabled=false;b.firstChild.textContent="Submit"});
+};
 $("again").onclick=function(e){e.preventDefault();location.reload()};
 render();

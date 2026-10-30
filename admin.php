@@ -41,6 +41,22 @@ if ($logged) {
     }
 }
 
+// ---- CSV export: interested people ----
+if ($logged && $db && isset($_GET['export_contacts'])) {
+    ensure_contacts($db);
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="easydays_interested_people.csv"');
+    echo "\xEF\xBB\xBF";
+    $out = fopen('php://output', 'w');
+    $safe = function ($v) { $v = (string)$v; return preg_match('/^[=+\-@]/', $v) ? "'" . $v : $v; };
+    fputcsv($out, ['ID', 'Date', 'Name', 'Email', 'Phone'], ',', '"', '');
+    foreach (rows($db, 'SELECT * FROM contacts ORDER BY id ASC') as $r) {
+        fputcsv($out, [$r['id'], $r['created_at'], $safe($r['name']), $safe($r['email']), $safe($r['phone'])], ',', '"', '');
+    }
+    fclose($out);
+    exit;
+}
+
 // ---- CSV export ----
 if ($logged && $db && isset($_GET['export'])) {
     $qs = questions();
@@ -83,7 +99,8 @@ if ($logged && $db && isset($_GET['export'])) {
     </form>
   </div>
 <?php else:
-  $view = (($_GET['view'] ?? 'summary') === 'responses') ? 'responses' : 'summary';
+  $view = $_GET['view'] ?? 'summary';
+  $view = in_array($view, ['responses', 'contacts'], true) ? $view : 'summary';
   $qs = questions();
 ?>
   <div class="top">
@@ -93,6 +110,7 @@ if ($logged && $db && isset($_GET['export'])) {
     </div>
     <div class="actions">
       <a class="btn" href="admin.php?export=1">⬇ Download CSV</a>
+      <a class="btn" href="admin.php?export_contacts=1">⬇ Interested people CSV</a>
       <a class="btn ghost" href="admin.php?logout=1">Log out</a>
     </div>
   </div>
@@ -102,18 +120,38 @@ if ($logged && $db && isset($_GET['export'])) {
 <?php else:
   $total = (int)scalar($db, 'SELECT COUNT(*) FROM responses');
   $last  = scalar($db, 'SELECT MAX(created_at) FROM responses');
+  ensure_contacts($db);
+  $ctotal = (int)scalar($db, 'SELECT COUNT(*) FROM contacts');
 ?>
   <div class="stats">
     <div class="card stat"><b><?= $total ?></b><span>Total responses</span></div>
     <div class="card stat"><b><?= $last ? h(date('d M Y, h:i A', strtotime($last))) : '–' ?></b><span>Latest response</span></div>
+    <div class="card stat"><b><?= $ctotal ?></b><span>Interested to join</span></div>
   </div>
 
   <div class="tabs">
     <a class="<?= $view === 'summary' ? 'on' : '' ?>" href="admin.php?view=summary">Summary</a>
     <a class="<?= $view === 'responses' ? 'on' : '' ?>" href="admin.php?view=responses">All responses</a>
+    <a class="<?= $view === 'contacts' ? 'on' : '' ?>" href="admin.php?view=contacts">Interested people</a>
   </div>
 
-<?php if ($total === 0): ?>
+<?php if ($view === 'contacts'):
+  $crows = rows($db, 'SELECT * FROM contacts ORDER BY id DESC LIMIT 500'); ?>
+  <div class="card tablewrap">
+  <?php if (!$crows): ?><p class="muted">No one has shared their details yet.</p><?php else: ?>
+    <table>
+      <thead><tr><th>#</th><th>Date</th><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
+      <tbody>
+      <?php foreach ($crows as $r): ?>
+        <tr><td><?= (int)$r['id'] ?></td><td class="nw"><?= h(date('d M Y, h:i A', strtotime($r['created_at']))) ?></td>
+          <td><?= h($r['name']) ?></td><td><?= h($r['email']) ?></td><td><?= h($r['phone']) ?></td></tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+  <?php endif; ?>
+  </div>
+
+<?php elseif ($total === 0): ?>
   <div class="card"><p class="muted">No responses yet. They will appear here after someone submits the survey.</p></div>
 
 <?php elseif ($view === 'summary'): ?>

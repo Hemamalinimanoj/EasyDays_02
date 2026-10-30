@@ -74,6 +74,41 @@
   <p class="thanks">Thank you for your time! <span>💜</span></p>
 </div>
 
-<script src="survey.js?v=1"></script>
+<div id="joinModal" class="modal hide" role="dialog" aria-modal="true" aria-labelledby="jmTitle">
+  <div class="mbox">
+    <button type="button" class="mx" id="jmClose" aria-label="Close">&times;</button>
+
+    <div id="jmAsk" class="mstep">
+      <div class="okmark sm">💜</div>
+      <h2 id="jmTitle">Would you like to be a part of this application development?</h2>
+      <p class="hint">Join us and help shape the Easy Days app.</p>
+      <div class="mbtns">
+        <button type="button" class="next" id="jmYes"><span>Yes, I’d love to</span></button>
+        <button type="button" class="prev" id="jmNo"><span>No, thanks</span></button>
+      </div>
+    </div>
+
+    <div id="jmForm" class="mstep hide">
+      <h2>Great! Share your details</h2>
+      <p class="hint">We’ll get in touch with you soon.</p>
+      <label class="fl">Name<input class="txt" type="text" id="jmName" maxlength="100" autocomplete="name" placeholder="Your full name"></label>
+      <label class="fl">Email<input class="txt" type="email" id="jmEmail" maxlength="150" autocomplete="email" placeholder="you@example.com"></label>
+      <label class="fl">Phone number<input class="txt" type="tel" id="jmPhone" maxlength="20" autocomplete="tel" placeholder="Mobile number"></label>
+      <p class="msg" id="jmMsg"></p>
+      <div class="mbtns">
+        <button type="button" class="next" id="jmSend"><span>Submit</span></button>
+      </div>
+    </div>
+
+    <div id="jmThanks" class="mstep hide">
+      <div class="okmark sm">✓</div>
+      <h2 id="jmThanksT">Thank you for your valuable time.</h2>
+      <p class="hint" id="jmThanksP"></p>
+      <div class="mbtns"><button type="button" class="next" id="jmDone"><span>Close</span></button></div>
+    </div>
+  </div>
+</div>
+
+<script src="survey.js?v=5"></script>
 </body>
 </html>
