@@ -17,7 +17,7 @@ RUN ON XAMPP (your laptop)
 2. Open XAMPP Control Panel > Start "Apache" and Start "MySQL".
 3. Survey page :  http://localhost/easydays_survey/
 4. Client page :  http://localhost/easydays_survey/admin.php
-     Username: ADMIN_PASS     Password: set as ADMIN_PASS in C:\xampp\apache\conf\extra\httpd-xampp.conf
+     Username: admin     Password: Admin123
      Restart Apache after setting the password. Do not commit the password to Git.
 5. Database "easydays" and table "responses" are created automatically
    on the first submit. No need to create anything in phpMyAdmin.
