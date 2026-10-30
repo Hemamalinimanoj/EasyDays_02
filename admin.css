@@ -31,3 +31,31 @@ td.nw{white-space:nowrap}
 .login label{display:block;text-align:left;font-size:14px;margin:12px 0}
 .login input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:6px;font:inherit;margin-top:4px}
 .login .btn{width:100%;margin-top:8px}
+
+/* charts */
+.chartgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:14px}
+.chartgrid .card{margin-bottom:0}
+.chartgrid h3{font-size:15px;line-height:1.35}
+.donutwrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.donut{width:140px;height:140px;flex:none}
+.donut .dn{font-size:24px;font-weight:700;fill:var(--p)}
+.donut .dl{font-size:9px;fill:var(--mu)}
+.legend{list-style:none;margin:0;padding:0;flex:1;min-width:190px}
+.legend li{display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0}
+.legend li i{width:12px;height:12px;border-radius:3px;flex:none}
+.legend li span{flex:1}
+.legend li b{color:var(--tx)}
+.legend li em{color:var(--mu);font-style:normal;min-width:26px;text-align:right}
+.barchart{width:100%;height:auto;display:block}
+.barchart .bv{font-size:12px;fill:var(--p);font-weight:700}
+.barchart .bx{font-size:10px;fill:var(--mu)}
+.track.big{height:16px;border-radius:8px}
+.track.big i{border-radius:8px;background:linear-gradient(90deg,#6f3a78,#c27ccf)}
+@media (max-width:520px){.chartgrid{grid-template-columns:1fr}}
+
+.okmsg{color:#188038;font-size:14px;margin:0;font-weight:500}
+.danger{margin-top:26px;border-color:#f3c2bd}
+.danger summary{cursor:pointer;color:var(--er);font-weight:500;font-size:14px}
+.danger form{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.danger input[type=text]{flex:1;min-width:200px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;font:inherit;font-size:14px}
+.danger-btn{background:var(--er);border-color:var(--er)}

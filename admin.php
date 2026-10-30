@@ -6,6 +6,24 @@ session_start();
 
 function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
+const CHART_COLORS = ['#6f3a78', '#c27ccf', '#f08fb5', '#f5b95b', '#4fb3a1', '#5b8def'];
+
+// Donut chart (pure SVG, no internet / libraries needed). $items = [[label, count], ...]
+function donut_svg(array $items): string {
+    $total = array_sum(array_column($items, 1));
+    $r = 52; $c = 2 * M_PI * $r; $off = 0.0;
+    $svg = '<svg viewBox="0 0 140 140" class="donut" role="img"><circle cx="70" cy="70" r="' . $r . '" fill="none" stroke="#f0eaf3" stroke-width="22"/>';
+    foreach ($items as $i => $it) {
+        if ($total <= 0 || $it[1] <= 0) continue;
+        $len = $it[1] / $total * $c;
+        $svg .= '<circle cx="70" cy="70" r="' . $r . '" fill="none" stroke="' . CHART_COLORS[$i % count(CHART_COLORS)] . '" stroke-width="22"'
+              . ' stroke-dasharray="' . round($len, 2) . ' ' . round($c - $len, 2) . '" stroke-dashoffset="' . round(-$off, 2) . '" transform="rotate(-90 70 70)"/>';
+        $off += $len;
+    }
+    $svg .= '<text x="70" y="68" text-anchor="middle" class="dn">' . (int)$total . '</text><text x="70" y="85" text-anchor="middle" class="dl">answers</text></svg>';
+    return $svg;
+}
+
 // ---- logout ----
 if (isset($_GET['logout'])) {
     $_SESSION = [];
@@ -38,6 +56,29 @@ if ($logged) {
     } catch (Throwable $e) {
         error_log('EasyDays admin error: ' . $e->getMessage());
         $dbError = 'Could not connect to the database. ' . db_hint($e);
+    }
+}
+
+// ---- delete ALL old data (responses + interested people) ----
+$flash = '';
+if ($logged && !empty($_SESSION['ok']) && empty($_SESSION['csrf'])) { $_SESSION['csrf'] = bin2hex(random_bytes(16)); }
+if ($logged && $db && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['wipe'])) {
+    if (!hash_equals($_SESSION['csrf'] ?? '', (string)($_POST['csrf'] ?? '')) || trim((string)($_POST['confirm'] ?? '')) !== 'DELETE') {
+        $flash = 'Nothing was deleted. Type DELETE (capital letters) to confirm.';
+    } else {
+        try {
+            ensure_contacts($db);
+            if ($db instanceof PDO) {
+                $db->exec('TRUNCATE TABLE responses, contacts RESTART IDENTITY');
+            } else {
+                $db->query('TRUNCATE TABLE `responses`');
+                $db->query('TRUNCATE TABLE `contacts`');
+            }
+            $flash = 'All old responses and interested-people data were deleted.';
+        } catch (Throwable $e) {
+            error_log('EasyDays wipe error: ' . $e->getMessage());
+            $flash = 'Could not delete the data. ' . db_hint($e);
+        }
     }
 }
 
@@ -123,6 +164,7 @@ if ($logged && $db && isset($_GET['export'])) {
   ensure_contacts($db);
   $ctotal = (int)scalar($db, 'SELECT COUNT(*) FROM contacts');
 ?>
+  <?php if ($flash): ?><div class="card"><p class="<?= str_starts_with($flash, 'All old') ? 'okmsg' : 'err' ?>"><?= h($flash) ?></p></div><?php endif; ?>
   <div class="stats">
     <div class="card stat"><b><?= $total ?></b><span>Total responses</span></div>
     <div class="card stat"><b><?= $last ? h(date('d M Y, h:i A', strtotime($last))) : '–' ?></b><span>Latest response</span></div>
@@ -155,31 +197,70 @@ if ($logged && $db && isset($_GET['export'])) {
   <div class="card"><p class="muted">No responses yet. They will appear here after someone submits the survey.</p></div>
 
 <?php elseif ($view === 'summary'): ?>
+  <?php
+    // ---- responses per day (last 14 days) ----
+    $days = [];
+    for ($i = 13; $i >= 0; $i--) { $days[date('Y-m-d', strtotime("-$i day"))] = 0; }
+    foreach (rows($db, 'SELECT created_at FROM responses ORDER BY id DESC LIMIT 5000') as $r) {
+        $d = date('Y-m-d', strtotime($r['created_at']));
+        if (isset($days[$d])) $days[$d]++;
+    }
+    $maxDay = max(1, max($days));
+
+    // ---- interest summary (how many said Yes) ----
+    $interest = [
+        'q4'  => 'Would use a digital calendar',
+        'q9'  => 'Would chat with a gynaecologist online',
+        'q21' => 'Would use the full Easy Days platform',
+        'q23' => 'Want to join and give feedback',
+    ];
+  ?>
+  <div class="card">
+    <h3>Responses in the last 14 days</h3>
+    <svg viewBox="0 0 600 190" class="barchart" role="img">
+      <?php $n = count($days); $bw = 600 / $n; $i = 0;
+      foreach ($days as $d => $cnt): $bh = $cnt / $maxDay * 130; $x = $i * $bw + 6; ?>
+        <rect x="<?= round($x, 1) ?>" y="<?= round(150 - $bh, 1) ?>" width="<?= round($bw - 12, 1) ?>" height="<?= round($bh, 1) ?>" rx="4" fill="#6f3a78"/>
+        <?php if ($cnt > 0): ?><text x="<?= round($x + ($bw - 12) / 2, 1) ?>" y="<?= round(144 - $bh, 1) ?>" text-anchor="middle" class="bv"><?= $cnt ?></text><?php endif; ?>
+        <text x="<?= round($x + ($bw - 12) / 2, 1) ?>" y="170" text-anchor="middle" class="bx"><?= h(date('d M', strtotime($d))) ?></text>
+      <?php $i++; endforeach; ?>
+      <line x1="0" y1="150" x2="600" y2="150" stroke="#dadce0"/>
+    </svg>
+  </div>
+
+  <div class="card">
+    <h3>Interest in the app (% who said Yes)</h3>
+    <?php foreach ($interest as $id => $label):
+      $yes = (int)scalar($db, "SELECT COUNT(*) FROM responses WHERE " . qid($id) . " LIKE 'Yes%'");
+      $all = (int)scalar($db, "SELECT COUNT(*) FROM responses WHERE " . qid($id) . " IS NOT NULL");
+      $pct = $all ? round($yes / $all * 100) : 0; ?>
+      <div class="bar">
+        <div class="lbl"><span><?= h($label) ?></span><span><b><?= $pct ?>%</b> (<?= $yes ?> of <?= $all ?>)</span></div>
+        <div class="track big"><i style="width:<?= $pct ?>%"></i></div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+
+  <div class="chartgrid">
   <?php foreach ($qs as $id => $q): if ($q['type'] !== 'choice') continue;
     $rows = rows($db, "SELECT " . qid($id) . " AS v, COUNT(*) AS c FROM responses WHERE " . qid($id) . " IS NOT NULL GROUP BY " . qid($id) . " ORDER BY c DESC");
-    $sum = array_sum(array_column($rows, 'c')); ?>
+    $sum = array_sum(array_column($rows, 'c'));
+    $items = array_map(fn($r) => [$r['v'], (int)$r['c']], $rows); ?>
     <div class="card">
       <h3><?= h($q['t']) ?></h3>
-      <?php if (!$rows): ?><p class="muted">No answers yet.</p><?php endif; ?>
-      <?php foreach ($rows as $r): $pct = $sum ? round($r['c'] / $sum * 100) : 0; ?>
-        <div class="bar">
-          <div class="lbl"><span><?= h($r['v']) ?></span><span><?= (int)$r['c'] ?> (<?= $pct ?>%)</span></div>
-          <div class="track"><i style="width:<?= $pct ?>%"></i></div>
-        </div>
-      <?php endforeach; ?>
+      <?php if (!$rows): ?><p class="muted">No answers yet.</p><?php else: ?>
+      <div class="donutwrap">
+        <?= donut_svg($items) ?>
+        <ul class="legend">
+          <?php foreach ($items as $i => $it): $pct = $sum ? round($it[1] / $sum * 100) : 0; ?>
+            <li><i style="background:<?= CHART_COLORS[$i % count(CHART_COLORS)] ?>"></i><span><?= h($it[0]) ?></span><b><?= $pct ?>%</b><em><?= $it[1] ?></em></li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+      <?php endif; ?>
     </div>
   <?php endforeach; ?>
-
-  <?php foreach ($qs as $id => $q): if ($q['type'] !== 'text') continue;
-    $rows = rows($db, "SELECT created_at, " . qid($id) . " AS v FROM responses WHERE " . qid($id) . " IS NOT NULL ORDER BY id DESC LIMIT 20"); ?>
-    <div class="card">
-      <h3><?= h($q['t']) ?></h3>
-      <?php if (!$rows): ?><p class="muted">No answers yet.</p><?php endif; ?>
-      <?php foreach ($rows as $r): ?>
-        <p class="quote"><?= nl2br(h($r['v'])) ?></p>
-      <?php endforeach; ?>
-    </div>
-  <?php endforeach; ?>
+  </div>
 
 <?php else:
   $per = 25;
@@ -208,6 +289,16 @@ if ($logged && $db && isset($_GET['export'])) {
     <?php if ($page < $pages): ?><a class="btn ghost" href="admin.php?view=responses&page=<?= $page + 1 ?>">Older →</a><?php endif; ?>
   </div>
 <?php endif; ?>
+  <details class="card danger">
+    <summary>Delete all old data</summary>
+    <p class="muted">This permanently deletes <b>all survey responses and all “interested people” details</b>. It cannot be undone. Download the CSV files first if you need a copy.</p>
+    <form method="post" onsubmit="return confirm('Delete ALL data permanently?')">
+      <input type="hidden" name="wipe" value="1">
+      <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf'] ?? '') ?>">
+      <input type="text" name="confirm" placeholder="Type DELETE to confirm" autocomplete="off" required>
+      <button class="btn danger-btn" type="submit">Delete everything</button>
+    </form>
+  </details>
 <?php endif; ?>
 <?php endif; ?>
 </body>
