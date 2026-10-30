@@ -1,0 +1,33 @@
+:root{--p:#6f3a78;--pl:#f0eaf3;--bd:#dadce0;--tx:#202124;--mu:#5f6368;--er:#d93025}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pl);color:var(--tx);font-family:Roboto,Arial,sans-serif;line-height:1.5;padding:16px;max-width:1100px;margin:0 auto}
+h1{font-size:24px;margin:0;color:var(--p)}
+h3{font-size:16px;margin:0 0 12px;font-weight:500}
+.muted{color:var(--mu);font-size:14px;margin:2px 0 0}
+.err{color:var(--er);font-size:14px}
+.card{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:18px 20px;margin-bottom:14px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 16px}
+.actions{display:flex;gap:8px}
+.btn{display:inline-block;background:var(--p);color:#fff;text-decoration:none;border:1px solid var(--p);border-radius:6px;padding:8px 16px;font:inherit;font-size:14px;font-weight:500;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--p)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.stat b{display:block;font-size:26px;color:var(--p)}
+.stat span{color:var(--mu);font-size:14px}
+.tabs{display:flex;gap:6px;margin:4px 0 14px}
+.tabs a{padding:8px 16px;border-radius:20px;text-decoration:none;color:var(--p);font-size:14px;font-weight:500}
+.tabs a.on{background:var(--p);color:#fff}
+.bar{margin:10px 0}
+.lbl{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px;gap:10px}
+.track{height:10px;background:#ece3f0;border-radius:5px;overflow:hidden}
+.track i{display:block;height:100%;background:var(--p);border-radius:5px}
+.quote{background:#faf6fc;border-left:3px solid var(--p);padding:8px 12px;margin:8px 0;font-size:14px;border-radius:4px}
+.tablewrap{padding:0;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top;min-width:120px}
+th{background:#faf6fc;position:sticky;top:0;font-weight:500}
+td.nw{white-space:nowrap}
+.pager{display:flex;justify-content:center;align-items:center;gap:14px;margin:10px 0 30px}
+.login{max-width:360px;margin:60px auto;text-align:center}
+.login label{display:block;text-align:left;font-size:14px;margin:12px 0}
+.login input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:6px;font:inherit;margin-top:4px}
+.login .btn{width:100%;margin-top:8px}
