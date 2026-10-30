@@ -16,5 +16,5 @@ date_default_timezone_set(env_or('APP_TZ', 'Asia/Kolkata'));   // times shown in
 define('DB_SSL',  env_or('DB_SSL', '0') === '1');   // set DB_SSL=1 for cloud MySQL (Aiven, TiDB, etc.)
 
 // Client login for admin.php -> set ADMIN_PASS in the server environment
-define('ADMIN_USER', env_or('ADMIN_USER', 'admin'));
+define('ADMIN_USER', env_or('ADMIN_USER', 'ADMIN_PASS'));
 define('ADMIN_PASS', env_or('ADMIN_PASS', ''));
