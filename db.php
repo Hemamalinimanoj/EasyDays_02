@@ -15,6 +15,9 @@ function db_hint(Throwable $e): string {
         if (!extension_loaded('pdo_pgsql')) { return 'PHP extension pdo_pgsql is not enabled.'; }
         return 'Check DATABASE_URL in Render Environment. Details: ' . $e->getMessage();
     }
+    if (getenv('RENDER') !== false && getenv('RENDER') !== '') {
+        return 'This site is running on Render but DATABASE_URL is not set, so it is looking for a local MySQL. Render dashboard > your Web Service > Environment > add DATABASE_URL = the Internal Database URL of your Render Postgres, then Save (it redeploys automatically).';
+    }
     $code = (int)$e->getCode();
     if (!extension_loaded('mysqli')) {
         return 'PHP extension "mysqli" is not enabled. In php.ini remove the ; before extension=mysqli, then restart Apache.';
